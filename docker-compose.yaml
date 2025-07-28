@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres
+    restart: always
+
+    environment:
+      POSTGRES_USER: tims
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: noteddb
+    
+    ports:
+      - "5432:5432"
+    
+    volumes:
+      - ./docker-data/db:/var/lib/postgresql/data
