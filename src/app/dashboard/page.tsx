@@ -20,6 +20,7 @@ export default async function HomePage() {
   const rawTasks = await prisma.task.findMany({
     where: {
       user_id: session.user.id,
+      group_id: null,
     },
     orderBy: {
       created_at: "desc",

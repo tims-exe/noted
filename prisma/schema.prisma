@@ -34,7 +34,37 @@ model User {
   image         String?
   accounts      Account[]
   tasks Task[]
+  createdGroups Group[] @relation("GroupCreator")
+  groupMembers GroupMember[]
 }
+
+model Group {
+  id String @id @default(cuid())
+  name String 
+  code String @unique
+  created_at DateTime @default(now())
+  creator_id String
+
+  creator User @relation("GroupCreator", fields: [creator_id], references: [id], onDelete: Cascade)
+  members GroupMember[]
+  tasks Task[]
+
+  @@index([code])
+}
+
+model GroupMember {
+  id String @id @default(cuid())
+  user_id String 
+  group_id String 
+  joined_at DateTime @default(now())
+  role String @default("member")
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [group_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, group_id])
+}
+
 
 model Task {
   id          String   @id @default(cuid())
@@ -43,6 +73,11 @@ model Task {
   status      String
   created_at  DateTime @default(now())
   user_id     String
+  group_id String?
   
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  group Group? @relation(fields: [group_id], references: [id], onDelete: Cascade)
+
+  @@index([group_id])
+  @@index([user_id])
 }
