@@ -64,6 +64,8 @@ export default function HomePage() {
     return null
   }
 
+  console.log(session.user)
+
   return (
     <div className="relative flex flex-col h-screen">
       <Navbar user={session.user} />

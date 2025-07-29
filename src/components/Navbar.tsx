@@ -34,9 +34,9 @@ const Navbar = ({ user }: NavbarProps) => {
             <div className="flex-1 flex justify-end">
                 <Sheet>
                     <SheetTrigger className='hover:cursor-pointer'>
-                        {user.user_metadata?.avatar_url && (
+                        {user.image && (
                             <Image
-                                src={user.user_metadata.avatar_url}
+                                src={user.image || 'N/A'}
                                 alt="Avatar"
                                 width={40}
                                 height={40}
@@ -51,7 +51,7 @@ const Navbar = ({ user }: NavbarProps) => {
                     <div className="px-4 flex flex-col justify-between h-screen pb-8 items-center">
                         <div className='self-start'>
                             <div className='font-normal text-[16px]'>Name :</div>
-                            <div className='font-semibold mb-5 text-xl'> {user.user_metadata?.full_name || 'N/A'}</div>
+                            <div className='font-semibold mb-5 text-xl'> {user.name || 'N/A'}</div>
                             <div className='font-normal text-[16px]'>Email :</div> 
                             <div className='font-semibold mb-5 text-xl'>{user.email}</div>
                         </div>
