@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/sheet"
 import { signOut } from 'next-auth/react'
 import { Session } from 'next-auth'
+import { redirect } from "next/navigation";
 
 interface NavbarProps {
     user: Session["user"]
@@ -31,15 +32,21 @@ const Navbar = ({ user }: NavbarProps) => {
             <div className="flex-1 flex justify-center font-semibold text-xl text-black">
                 Noted
             </div>
-            <div className="flex-1 flex justify-end">
+            <div className="flex-1 flex justify-end items-center gap-5">
+                <button className='hover:cursor-pointer hover:bg-neutral-200 px-4 py-1 rounded-md transition-colors duration-300' onClick={() => {redirect("/dashboard")}}>
+                    Dashboard
+                </button>
+                <button className='hover:cursor-pointer hover:bg-neutral-200 px-4 py-1 rounded-md transition-colors duration-300' onClick={() => {redirect("/groups")}}>
+                    Groups
+                </button>
                 <Sheet>
                     <SheetTrigger className='hover:cursor-pointer'>
                         {user.image && (
                             <Image
                                 src={user.image || 'N/A'}
                                 alt="Avatar"
-                                width={40}
-                                height={40}
+                                width={35}
+                                height={35}
                                 className="rounded-full"
                             />
                             )}
