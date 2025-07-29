@@ -1,25 +1,14 @@
-'use client'
-
-import { signIn, useSession } from 'next-auth/react'
 import { redirect } from 'next/navigation'
-import { useEffect } from 'react'
 import Image from "next/image";
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/lib/auth'
+import SignInButton from '@/components/buttons/SignInButton';
 
-export default function LandingPage() {
-  const { data: session, status } = useSession()
+export default async function LandingPage() {
+  const session = await getServerSession(authOptions)
 
-  useEffect(() => {
-    if (session) {
-      redirect('/dashboard')
-    }
-  }, [session])
-
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
-      </div>
-    )
+  if (session?.user) {
+    redirect("/dashboard");
   }
 
   return (
@@ -32,12 +21,7 @@ export default function LandingPage() {
           </p>
         </div>
         <p>Built for people who get things done.</p>
-        <button
-          className="bg-neutral-300 px-8 py-3 rounded-2xl mt-10 hover:cursor-pointer hover:bg-neutral-400 transition-colors duration-200"
-          onClick={() => signIn('google')}
-        >
-          <p className="font-semibold">tasks</p>
-        </button>
+        <SignInButton />
       </div>
     </div>
   )

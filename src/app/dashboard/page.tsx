@@ -1,70 +1,38 @@
-'use client'
-
-import { useSession } from 'next-auth/react'
-import { redirect } from 'next/navigation'
-import { useEffect, useState, useCallback } from 'react'
-import Navbar from '../../components/Navbar'
-import AddTaskButton from "../../components/AddTaskButton";
+// src/app/dashboard/page.tsx
+import { getServerSession } from "next-auth/next";
+import { redirect } from "next/navigation";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import Navbar from "../../components/Navbar";
+import AddTaskButton from "../../components/buttons/AddTaskButton";
 import DragWrapper from "../../components/DragWrapper";
-import { Task } from '@/types/tasks'
+import { Task } from "@/types/tasks";
 
-export default function HomePage() {
-  const { data: session, status } = useSession()
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [loading, setLoading] = useState(true)
+export default async function HomePage() {
+  const session = await getServerSession(authOptions);
 
-  const fetchTasks = useCallback(async () => {
-    if (session?.user) {
-      try {
-        const response = await fetch('/api/tasks', { cache: 'no-store' })
-        if (response.ok) {
-          const tasksData = await response.json()
-          setTasks(tasksData as Task[])
-        }
-      } catch (error) {
-        console.error('Error fetching tasks:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-  }, [session])
+  console.log(session);
 
-  useEffect(() => {
-    if (status !== 'loading' && !session) {
-      redirect('/')
-    }
-  }, [session, status])
-
-  useEffect(() => {
-    if (session) {
-      fetchTasks()
-    }
-  }, [session, fetchTasks])
-
-  useEffect(() => {
-    const handleFocus = () => {
-      if (session) {
-        fetchTasks()
-      }
-    }
-
-    window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
-  }, [session, fetchTasks])
-
-  if (status === 'loading' || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
-      </div>
-    )
+  if (!session?.user) {
+    redirect("/");
   }
 
-  if (!session) {
-    return null
-  }
+  const rawTasks = await prisma.task.findMany({
+    where: {
+      user_id: session.user.id,
+    },
+    orderBy: {
+      created_at: "desc",
+    },
+  });
 
-  console.log(session.user)
+  const tasks: Task[] = rawTasks.map((task) => ({
+    ...task,
+    created_at: task.created_at.toISOString(),
+    status: task.status as "pending" | "in_progress" | "completed",
+  }));
+
+  console.log(tasks);
 
   return (
     <div className="relative flex flex-col h-screen">
@@ -76,5 +44,5 @@ export default function HomePage() {
       </div>
       <AddTaskButton />
     </div>
-  )
+  );
 }

@@ -14,7 +14,6 @@ export default function DragWrapper({ initialTasks }: DragWrapperProps) {
   const [tasks, setTasks] = useState<Task[]>(initialTasks)
   const [activeTask, setActiveTask] = useState<Task | null>(null)
 
-  // Sync local state with updated initialTasks after CRUD operations
   useEffect(() => {
     setTasks(initialTasks)
   }, [initialTasks])
@@ -59,6 +58,7 @@ export default function DragWrapper({ initialTasks }: DragWrapperProps) {
     ))
 
     try {
+      console.log("testing refresh....")
       const response = await fetch(`/api/tasks/${taskId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
