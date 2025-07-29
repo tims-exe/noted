@@ -33,4 +33,16 @@ model User {
   emailVerified DateTime?
   image         String?
   accounts      Account[]
+  tasks Task[]
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  status      String
+  created_at  DateTime @default(now())
+  user_id     String
+  
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
