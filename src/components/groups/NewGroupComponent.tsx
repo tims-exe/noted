@@ -1,6 +1,9 @@
 'use client'
 
+// add error conditions for invalid room name and code
+
 import { useState } from "react";
+import { redirect } from "next/navigation";
 
 export default function NewGroupComponent() {
     const [join, setJoin] = useState(false);
@@ -8,16 +11,55 @@ export default function NewGroupComponent() {
     const [roomCode, setRoomCode] = useState("");
 
     const handleClick = async () => {
-      // if (!join) {
-      //   const res = await fetch(`/api/tasks/${roomName}`, {
-      //       method: 'PUT',
-      //       headers: {
-      //           'Content-Type': 'application/json',
-      //       }, 
-      //       // body
-      //   })
-      // }
+      // create group
+      if (!join) {
+        if (!roomName.trim()) {
+          return
+        }
+        try {
+          const response = await fetch('/api/groups', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              }, 
+              body : JSON.stringify({
+                type: 'create',
+                name: roomName,
+              })
+          })
 
+          if (response.ok) {
+            const data = await response.json()
+            redirect(`/groups/${data.id}`);
+          }
+        } catch (error) {
+          console.log('handleClick create room : ', error)
+        }
+      }
+      // join group
+      else {
+        if (!roomCode.trim() || roomCode.trim().length !== 6) {
+          return
+        }
+        try {
+          const response = await fetch('/api/groups', {
+            method: 'POST',
+            headers: {
+              'Content-Type' : 'application/json', 
+            },
+            body: JSON.stringify({
+              type: 'join',
+              code: roomCode
+            })
+          })
+          if (response.ok) {
+            console.log(response.json)
+          }
+        }
+        catch (error) {
+          console.log('Failed to join group', error);
+        }
+      }
     }
 
     return (

@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import NewGroupComponent from '@/components/groups/NewGroupComponent';
+import MyGroups from '@/components/groups/MyGroups';
 
 
 export default async function Groups() {
@@ -30,6 +31,7 @@ export default async function Groups() {
                     <p className=' font-semibold text-xl'>
                         My groups
                     </p>
+                    <MyGroups />
                 </div>
             </div>
         </div>

@@ -136,45 +136,53 @@ export async function leaveGroup(groupId: string, userId: string) {
 
 }
 
+// get group details with member details and tasks
+export async function getGroupDetails(groupCode: string, userId: string) {
+    console.log(groupCode)
+    const groupByCode = await prisma.group.findUnique({
+        where: { code: groupCode },
+        select: { id: true }
+    })
+    if (!groupByCode) {
+        throw new Error("Group not found")
+    }
+    const group_id = groupByCode.id
 
-
-// get group details with members and tasks
-export async function getGroupDetails(groupId: string, userId: string) {
     const membership = await prisma.groupMember.findFirst({
         where: {
-            user_id: userId,
-            group_id: groupId
+        user_id: userId,
+        group_id: group_id
         }
     })
-
     if (!membership) {
         throw new Error("Access Denied")
     }
 
     const group = await prisma.group.findUnique({
-        where: {
-            id: groupId 
-        },
+        where: { id: group_id },
         include: {
-            creator: true, 
-            members: {
-                include: {
-                    user: true
-                }
+        creator: true,
+        members: {
+            include: {
+            user: true
+            }
+        },
+        tasks: {
+            include: {
+            user: true
             },
-            tasks: {
-                include: {
-                    user: true 
-                },
-                orderBy: {
-                    created_at: 'desc'
-                }
+            orderBy: {
+            created_at: 'desc'
             }
         }
-    });
+        }
+    })
+    if (!group) {
+        throw new Error("Group not found")
+    }
+
     return group
 }
-
 
 
 // get users groups

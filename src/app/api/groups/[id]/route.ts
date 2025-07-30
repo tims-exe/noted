@@ -15,8 +15,8 @@ export async function GET(
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
-    const group = getGroupDetails(id, session.user.id);
+    console.log('params', id)
+    const group = await getGroupDetails(id, session.user.id);
     
     return NextResponse.json(group)
 
