@@ -4,19 +4,40 @@ import { useState } from "react";
 
 export default function NewGroupComponent() {
     const [join, setJoin] = useState(false);
+    const [roomName, setRoomName] = useState("");
+    const [roomCode, setRoomCode] = useState("");
+
+    const handleClick = async () => {
+      // if (!join) {
+      //   const res = await fetch(`/api/tasks/${roomName}`, {
+      //       method: 'PUT',
+      //       headers: {
+      //           'Content-Type': 'application/json',
+      //       }, 
+      //       // body
+      //   })
+      // }
+
+    }
 
     return (
     <div className="flex-1 flex flex-col justify-start items-center w-full">
       <div className="flex flex-col items-start gap-4 mt-8 w-2/3 h-full">
         <div className="flex gap-4 px-3">
         <button
-            onClick={() => setJoin(false)}
+            onClick={() => {
+              setJoin(false)
+              setRoomCode("")
+            }}
             className={`${join ? 'text-neutral-500' : 'text-black'} font-semibold hover:cursor-pointer`}
         >
             New
         </button>
         <button
-            onClick={() => setJoin(true)}
+            onClick={() => {
+              setJoin(true)
+              setRoomName("")
+            }}
             className={`${join ? 'text-black' : 'text-neutral-500'} font-semibold hover:cursor-pointer`}
         >
             Join
@@ -32,9 +53,22 @@ export default function NewGroupComponent() {
             <p className="font-normal text-neutral-500 text-sm">
                 {join ? "Code" : "Name"}
             </p>
-            <input type="text" className="w-full py-3 px-3 border-2 border-neutral-400 rounded-md font-normal"/>
+            <input 
+              type="text" 
+              className="w-full py-3 px-3 border-2 border-neutral-400 rounded-md font-normal"
+              value={join ? roomCode : roomName}
+              onChange={(e) => {
+                if (join) {
+                  setRoomCode(e.target.value)
+                }
+                else{
+                  setRoomName(e.target.value)
+                }
+              }}
+            />
           </div>
-          <button className="mt-10 border-2 border-neutral-400 px-5 py-2 rounded-2xl hover:cursor-pointer hover:shadow-[0_0_10px_2px_rgba(0,0,0,0.20)] transition-shadow duration-200">
+          <button className="mt-10 border-2 border-neutral-400 px-5 py-2 rounded-2xl hover:cursor-pointer hover:shadow-[0_0_10px_2px_rgba(0,0,0,0.20)] transition-shadow duration-200"
+          onClick={handleClick}>
             {join ? "Join" : "Create"}
           </button>
         </div>
