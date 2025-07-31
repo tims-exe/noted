@@ -4,14 +4,16 @@ import TaskCard from "./GroupTaskCards";
 
 
 interface TaskSectionProps {
-    title: string, 
-    tasks: Task[],
-    bgColor: string,
-    emptyMsg : string,
+    title: string
+    tasks: Task[]
+    bgColor: string
+    emptyMsg : string
     align : string
+    groupCode?: string
+    onTaskChange: () => void
 }
 
-export default function GroupTaskSection ({ title, tasks, bgColor, emptyMsg, align } : TaskSectionProps) {
+export default function GroupTaskSection ({ title, tasks, bgColor, emptyMsg, align, groupCode, onTaskChange } : TaskSectionProps) {
     return (
         <div className="flex flex-col h-full w-full">
             <div className={`${bgColor} px-3 py-1 rounded-md mb-4 text-center w-[120px] ${align}`}>
@@ -23,7 +25,7 @@ export default function GroupTaskSection ({ title, tasks, bgColor, emptyMsg, ali
             >
                 {tasks.length > 0 ? (
                 tasks.map((task) => (
-                    <TaskCard key={task.id} task={task} />
+                    <TaskCard key={task.id} task={task} groupCode={groupCode} onTaskChange={onTaskChange}/>
                 ))
                 ) : (
                 <div className="text-center text-gray-500 text-sm mt-8">

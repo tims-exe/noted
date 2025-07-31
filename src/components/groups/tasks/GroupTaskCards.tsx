@@ -7,10 +7,12 @@ import DialogComponents from "../../DialogComponents";
 import Image from "next/image";
 
 interface TaskCardProps {
-  task: Task;
+  task: Task
+  groupCode?: string
+  onTaskChange: () => void
 }
 
-export default function GroupTaskCard({ task }: TaskCardProps) {
+export default function GroupTaskCard({ task, groupCode, onTaskChange }: TaskCardProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -36,6 +38,8 @@ export default function GroupTaskCard({ task }: TaskCardProps) {
         _status={task.status}
         _edit={true}
         _group={true}
+        _groupCode={groupCode}
+        _onTaskChange={onTaskChange}
       />
     </Dialog>
   );

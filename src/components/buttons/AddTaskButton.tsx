@@ -6,11 +6,13 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import DialogComponents from "../DialogComponents";
 
 interface AddButtonProps {
-  group: boolean,
+  group: boolean
   groupId? :string
+  groupCode?: string,
+  onTaskChange: () => void
 }
 
-const AddTaskButton = ({ group, groupId }: AddButtonProps) => {
+const AddTaskButton = ({ group, groupId, groupCode, onTaskChange }: AddButtonProps) => {
   return (
     <div
       className="absolute bottom-6 right-6 w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-[0_0_20px_2px_rgba(0,0,0,0.25)]
@@ -26,7 +28,7 @@ const AddTaskButton = ({ group, groupId }: AddButtonProps) => {
             className="hover:cursor-pointer"
           />
         </DialogTrigger>
-        <DialogComponents _id="" _name="" _desc="" _status="" _edit={false} _group={group} _groupId={groupId}/>
+        <DialogComponents _id="" _name="" _desc="" _status="" _edit={false} _group={group} _groupId={groupId} _groupCode={groupCode} _onTaskChange={onTaskChange}/>
       </Dialog>
     </div>
   );

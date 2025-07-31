@@ -1,4 +1,4 @@
-//components/DialogCompoenets.tsx
+//components/DialogComponents.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -21,6 +21,7 @@ import {
 
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useWebSocket } from "@/hooks/useWebSocket";
 
 interface DialogComponentProps {
   _id: string;
@@ -30,6 +31,8 @@ interface DialogComponentProps {
   _edit: boolean;
   _group: boolean;
   _groupId? : string;
+  _groupCode?: string;
+  _onTaskChange: () => void
 }
 
 const DialogComponents = ({
@@ -39,8 +42,14 @@ const DialogComponents = ({
   _edit,
   _id,
   _group,
-  _groupId
+  _groupId,
+  _groupCode,
+  _onTaskChange
 }: DialogComponentProps) => {
+  console.log('📝 DialogComponents: Rendered with props:', { 
+    _name, _desc, _status, _edit, _id, _group, _groupId, _groupCode 
+  });
+
   const [name, setName] = useState(_name);
   const [desc, setDesc] = useState(_desc);
   const [loading, setLoading] = useState(false);
@@ -57,13 +66,21 @@ const DialogComponents = ({
   const updateString = _edit ? "Updated" : "Added"; 
   const router = useRouter();
 
-  const handleSave = async () => {
-    if (!canSave) return;
+  const { emit } = useWebSocket();
 
+  const handleSave = async () => {
+    if (!canSave) {
+      console.log('❌ DialogComponents: Cannot save - validation failed');
+      return;
+    }
+
+    console.log('💾 DialogComponents: Starting save operation', { name: name.trim(), desc: desc.trim(), status });
     setLoading(true);
 
     try {
       if (_edit) {
+        console.log('✏️ DialogComponents: Updating existing task with id:', _id);
+        
         const res = await fetch(`/api/tasks/${_id}`, {
             method: 'PUT',
             headers: {
@@ -75,18 +92,34 @@ const DialogComponents = ({
                 status,
             })
         })
+        
+        console.log('📡 DialogComponents: Update API response status:', res.status);
+        
         if (res.ok) {
+            if (_group && _groupCode) {
+              console.log('📤 DialogComponents: Emitting task_updated event via WebSocket');
+              emit('task_updated', {
+                id: _id,
+                title: name.trim(),
+                description: desc.trim(),
+                status: status.toLowerCase().replace(' ', '_')
+              });
+            }
             toast(`Task ${updateString}`);
-            router.refresh();
         } else {
             const errorData = await res.json();
+            console.error('❌ DialogComponents: Update failed:', errorData);
             toast(`Failed to ${updateString.toLowerCase()} task: ${errorData.error || 'Unknown error'}`);
         }
       }
       else {
+        console.log('➕ DialogComponents: Creating new task');
+        
         const endpoint = _group && _groupId 
           ? `/api/groups/${_groupId}/tasks` 
           : "/api/tasks";
+        
+        console.log('📡 DialogComponents: Creating task at endpoint:', endpoint);
           
         const res = await fetch(endpoint, {
             method: "POST",
@@ -99,47 +132,74 @@ const DialogComponents = ({
                 status,
             }),
         });
+        
+        console.log('📡 DialogComponents: Create API response status:', res.status);
+        
         if (res.ok) {
+          const newTask = await res.json();
+          console.log('📝 DialogComponents: Created new task:', newTask);
+          
+            if (_group && _groupCode) {
+              console.log('📤 DialogComponents: Emitting task_created event via WebSocket');
+              emit('task_created', {
+                id: newTask.id,
+                title: name.trim(),
+                description: desc.trim(),
+                status: status.toLowerCase().replace(' ', '_')
+              });
+            }
             setName("");
             setDesc("");
             setStatus("");
             toast(`Task ${updateString}`);
-            router.refresh();
+            _onTaskChange();
         } else {
             const errorData = await res.json();
+            console.error('❌ DialogComponents: Create failed:', errorData);
             toast(`Failed to ${updateString.toLowerCase()} task: ${errorData.error || 'Unknown error'}`);
         }
       }
     } catch (error) {
-      console.error(`Error ${updateString} task:`, error);
+      console.error(`❌ DialogComponents: Error ${updateString} task:`, error);
       toast(`Failed to ${updateString.toLowerCase()} task. Please try again.`);
     } finally {
+      console.log('🏁 DialogComponents: Save operation completed');
       setLoading(false);
     }
   };
 
   const handleDelete = async () => {
+    console.log('🗑️ DialogComponents: Starting delete operation for task id:', _id);
     setLoading(true);
+    
     try {
         const res = await fetch(`/api/tasks/${_id}`, {
             method: "DELETE",
         });
 
+        console.log('📡 DialogComponents: Delete API response status:', res.status);
+
         if (res.ok) {
+            if (_group && _groupCode) {
+              console.log('📤 DialogComponents: Emitting task_deleted event via WebSocket');
+              emit('task_deleted', { id: _id });
+            }
             toast(`Task Deleted`);
-            router.refresh();
         }
         else {
             const errorData = await res.json();
+            console.error('❌ DialogComponents: Delete failed:', errorData);
             toast(`Failed to Delete Task: ${errorData.error || 'Unknown error'}`);
         }
     } catch (error) {
-        console.error('Error deleting task:', error);
+        console.error('❌ DialogComponents: Error deleting task:', error);
         toast('Error deleting task');
     } finally {
+        console.log('🏁 DialogComponents: Delete operation completed');
         setLoading(false);
     }
   }
+
   return (
     <DialogContent autoFocus={false} onOpenAutoFocus={(e) => e.preventDefault()}>
       <DialogHeader>
