@@ -35,7 +35,14 @@ export default function MyGroups () {
              </p> : 
              <div className="w-full space-y-4">
                 {groups.map((group) => (
-                    <GroupCard key={group.id} name={group.name} code={group.code} member_count={group._count.members} task_count={group._count.tasks}/>  
+                    <GroupCard 
+                    key={group.id} 
+                    group_code={group.code} 
+                    name={group.name} 
+                    code={group.code} 
+                    member_count={group._count.members} 
+                    task_count={group._count.tasks}
+                />  
                 ))}
              </div>
         }

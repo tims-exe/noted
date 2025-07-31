@@ -3,12 +3,13 @@
 // add error conditions for invalid room name and code
 
 import { useState } from "react";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function NewGroupComponent() {
     const [join, setJoin] = useState(false);
     const [roomName, setRoomName] = useState("");
     const [roomCode, setRoomCode] = useState("");
+    const router = useRouter();
 
     const handleClick = async () => {
       // create group
@@ -30,7 +31,8 @@ export default function NewGroupComponent() {
 
           if (response.ok) {
             const data = await response.json()
-            redirect(`/groups/${data.id}`);
+            console.log(data)
+            router.push(`/groups/${data.code}`);
           }
         } catch (error) {
           console.log('handleClick create room : ', error)
@@ -53,7 +55,8 @@ export default function NewGroupComponent() {
             })
           })
           if (response.ok) {
-            console.log(response.json)
+            const data = await response.json()
+            router.push(`/groups/${data.code}`);
           }
         }
         catch (error) {

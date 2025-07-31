@@ -77,7 +77,17 @@ export async function joinGroup(code: string, userId: string) {
 
 
 // leave a group
-export async function leaveGroup(groupId: string, userId: string) {
+export async function leaveGroup(groupCode: string, userId: string) {
+    const group_code = await prisma.group.findUnique({
+        where : {code: groupCode},
+        select: { id: true }
+    })
+
+    if (!group_code) {
+        throw new Error("Group not found")
+    }
+
+    const groupId = group_code.id
     const group = await prisma.group.findUnique({
         where: { id: groupId },
         include: {
@@ -138,15 +148,14 @@ export async function leaveGroup(groupId: string, userId: string) {
 
 // get group details with member details and tasks
 export async function getGroupDetails(groupCode: string, userId: string) {
-    console.log(groupCode)
-    const groupByCode = await prisma.group.findUnique({
+    const group_code = await prisma.group.findUnique({
         where: { code: groupCode },
         select: { id: true }
     })
-    if (!groupByCode) {
+    if (!group_code) {
         throw new Error("Group not found")
     }
-    const group_id = groupByCode.id
+    const group_id = group_code.id
 
     const membership = await prisma.groupMember.findFirst({
         where: {

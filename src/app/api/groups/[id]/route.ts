@@ -15,7 +15,6 @@ export async function GET(
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    console.log('params', id)
     const group = await getGroupDetails(id, session.user.id);
     
     return NextResponse.json(group)
@@ -29,6 +28,7 @@ export async function GET(
 
 // leave group
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }>}) {
+  console.log("entered delete route")
     try {
         const session = await getServerSession(authOptions)
         const { id } = await params;
