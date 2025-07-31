@@ -57,6 +57,7 @@ export default function TaskCard({ task }: TaskCardProps) {
           _desc={task.description}
           _status={task.status}
           _edit={true}
+          _group={false}
         />
       </Dialog>
     </div>

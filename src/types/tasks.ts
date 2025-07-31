@@ -4,5 +4,4 @@ export interface Task {
   description: string
   status: string
   created_at: string
-  user_id: string
 }

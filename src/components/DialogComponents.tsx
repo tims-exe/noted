@@ -28,6 +28,8 @@ interface DialogComponentProps {
   _desc: string;
   _status: string;
   _edit: boolean;
+  _group: boolean;
+  _groupId? : string;
 }
 
 const DialogComponents = ({
@@ -36,6 +38,8 @@ const DialogComponents = ({
   _status,
   _edit,
   _id,
+  _group,
+  _groupId
 }: DialogComponentProps) => {
   const [name, setName] = useState(_name);
   const [desc, setDesc] = useState(_desc);
@@ -80,15 +84,19 @@ const DialogComponents = ({
         }
       }
       else {
-        const res = await fetch("/api/tasks", {
+        const endpoint = _group && _groupId 
+          ? `/api/groups/${_groupId}/tasks` 
+          : "/api/tasks";
+          
+        const res = await fetch(endpoint, {
             method: "POST",
             headers: {
-            "Content-Type": "application/json",
+                "Content-Type": "application/json",
             },
             body: JSON.stringify({
-            name: name.trim(),
-            desc: desc.trim(),
-            status,
+                name: name.trim(),
+                desc: desc.trim(),
+                status,
             }),
         });
         if (res.ok) {

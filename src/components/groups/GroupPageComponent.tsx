@@ -11,6 +11,8 @@ import {
   TooltipTrigger,
   TooltipProvider,
 } from "@/components/ui/tooltip";
+import GroupTaskSection from "./tasks/GroupTaskSection";
+import AddTaskButton from "../buttons/AddTaskButton";
 
 interface GroupPageProps {
     id: string,
@@ -67,6 +69,12 @@ export default function GroupPageComponent({ id }: GroupPageProps) {
         }
     }
 
+    const pendingTasks = group?.tasks?.filter(task => task.status === 'pending') || []
+    const inProgressTasks = group?.tasks?.filter(task => task.status === 'in_progress') || []
+    const completedTasks = group?.tasks?.filter(task => task.status === 'completed') || []
+
+    console.log(pendingTasks)
+
     if (loading || !group) {
         return (
         <p className="h-full flex justify-center items-center">
@@ -77,8 +85,38 @@ export default function GroupPageComponent({ id }: GroupPageProps) {
 
     return (
         <div className="flex flex-row h-full">
-            <div className="flex flex-4/5 px-10 py-10">
-                main
+            <div className="flex flex-col flex-4/5 px-10 py-10">
+                <h1 className="text-3xl font-bold mb-6">Tasks</h1>
+                <div className="flex justify-between items-start w-full flex-1">
+                    <div className="flex flex-1 justify-start items-start h-full w-full">
+                        <GroupTaskSection
+                            title="Pending"
+                            tasks={pendingTasks}
+                            bgColor="bg-[#FEDFDF]"
+                            emptyMsg="No pending tasks"
+                            align="self-start ml-10"
+                        />
+                    </div>
+                    <div className="flex flex-1 justify-center items-start border-l-2 border-r-2 border-black/35 h-full w-full">
+                        <GroupTaskSection
+                            title="In Progress"
+                            tasks={inProgressTasks}
+                            bgColor="bg-[#FEF8DF]"
+                            emptyMsg="No tasks in progress"
+                            align="self-center"
+                        />
+                    </div>
+                    <div className="flex flex-1 justify-end items-start h-full min-w-0">
+                        <GroupTaskSection
+                            title="Completed"
+                            tasks={completedTasks}
+                            bgColor="bg-[#DFFEE0]"
+                            emptyMsg="No completed tasks"
+                            align="self-end mr-10"
+                        />
+                    </div>
+                    <AddTaskButton group={true} groupId={group.id}/>
+                </div>
             </div>
             <div className="w-0.5 bg-neutral-400 self-stretch my-10 rounded-full"></div>
             <div className="flex flex-col flex-1/5 px-10 py-10 justify-between">

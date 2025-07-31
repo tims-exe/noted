@@ -27,9 +27,9 @@ export async function POST(req: NextRequest, { params } : { params : Promise<{ i
         }
 
         const body = await req.json()
-        const { title, description, status = "pending" } = body;
+        const { name, desc, status } = body
 
-        if (!title || title.trim().length === 0) {
+        if (!name || name.trim().length === 0) {
         return NextResponse.json({ error: 'Name required' }, { status: 400 })
         }
 
@@ -41,8 +41,8 @@ export async function POST(req: NextRequest, { params } : { params : Promise<{ i
 
         const task = await prisma.task.create({
             data: {
-                title: title,
-                description: description || "",
+                title: name,
+                description: desc || "",
                 status: statusMap[status] || "pending",
                 user_id: session.user.id,
                 group_id: id 

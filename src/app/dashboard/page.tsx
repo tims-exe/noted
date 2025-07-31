@@ -41,7 +41,7 @@ export default async function HomePage() {
         <p className="my-10 font-semibold text-2xl">Your Tasks...</p>
         <DragWrapper initialTasks={tasks} />
       </div>
-      <AddTaskButton />
+      <AddTaskButton group={false}/>
     </div>
   );
 }
