@@ -14,7 +14,7 @@ export default async function GroupPage({ params }: { params: Promise<{ id: stri
     return (
         <div className="h-screen flex flex-col">
             <Navbar user={session.user} />
-            <GroupPageComponent id={id}/>
+            <GroupPageComponent id={id} user={session.user}/>
         </div>
     )
 }

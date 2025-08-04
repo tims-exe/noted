@@ -14,16 +14,23 @@ import {
 } from "@/components/ui/tooltip";
 import GroupTaskSection from "./tasks/GroupTaskSection";
 import AddTaskButton from "../buttons/AddTaskButton";
+import Image from "next/image";
+import { Session } from "next-auth";
 
 interface GroupPageProps {
     id: string,
+    user: Session["user"]
 }
 
-export default function GroupPageComponent({ id }: GroupPageProps) {
+export default function GroupPageComponent({ id, user }: GroupPageProps) {
     const router = useRouter()
     const [group, setGroup] = useState<GroupDetails | null>(null)
     const [loading, setLoading] = useState<boolean>(true)
     const [socket, setSocket] = useState<Socket | null>(null);
+
+    const isAdmin = group?.members
+    .find(m => m.user.id === user?.id)
+    ?.role === "admin";
 
     useEffect(() => {
         // 1. Fetch initial data
@@ -119,11 +126,28 @@ export default function GroupPageComponent({ id }: GroupPageProps) {
         }
     }
 
+    const handleDeleteGroup = async () => {
+        if (!confirm("Are you sure you want to delete this group? This action cannot be undone.")) {
+            return;
+        }
+        
+        try {
+            const res = await fetch(`/api/groups/${id}?action=delete`, { method: "DELETE" })
+            if (res.ok) {
+                console.log("Group deleted")
+                router.push("/groups")
+            } else {
+                console.error("Failed to delete group", await res.text())
+            }
+        } catch (err) {
+            console.error("Error deleting group:", err)
+        }
+    }
+
+
     const pendingTasks = group?.tasks?.filter(task => task.status === 'pending') || []
     const inProgressTasks = group?.tasks?.filter(task => task.status === 'in_progress') || []
     const completedTasks = group?.tasks?.filter(task => task.status === 'completed') || []
-
-    console.log(pendingTasks)
 
     if (loading || !group) {
         return (
@@ -210,10 +234,18 @@ export default function GroupPageComponent({ id }: GroupPageProps) {
                         ))}
                     </div>
                 </div>
-                <button onClick={handleLeaveGroup}
-                className="bg-red-200 mx-10 py-2 rounded-xl hover:cursor-pointer hover:bg-red-400 transition-colors duration-200">
-                    Leave Group
-                </button>
+                <div className="flex gap-2">
+                    <button onClick={handleLeaveGroup}
+                    className="bg-red-200 flex-1 py-2 rounded-xl hover:cursor-pointer hover:bg-red-400 transition-colors duration-200">
+                        Leave Group
+                    </button>
+                    {isAdmin && (
+                        <button onClick={handleDeleteGroup}
+                        className="bg-red-400 p-2 rounded-xl hover:cursor-pointer hover:bg-red-700 transition-colors duration-200">
+                            <Image src="/delete_icon.png" alt="Delete Group" width={20} height={20} />
+                        </button>
+                    )}
+</div>
             </div>
         </div>
     )

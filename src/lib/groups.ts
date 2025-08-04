@@ -147,6 +147,30 @@ export async function leaveGroup(groupCode: string, userId: string) {
     })
 }
 
+
+// delete group (admin only)
+export async function deleteGroup(groupCode: string, userId: string) {
+    const group_code = await prisma.group.findUnique({
+        where: { code: groupCode },
+        select: { id: true, creator_id: true }
+    })
+
+    if (!group_code) {
+        throw new Error("Group not found")
+    }
+
+    // Check if user is the admin/creator
+    if (group_code.creator_id !== userId) {
+        throw new Error("Only admin can delete the group")
+    }
+
+    // Delete the group (cascade will handle members and tasks)
+    await prisma.group.delete({
+        where: { id: group_code.id }
+    });
+}
+
+
 // get group details with member details and tasks
 export async function getGroupDetails(groupCode: string, userId: string) {
     const group_code = await prisma.group.findUnique({

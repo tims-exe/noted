@@ -1,5 +1,5 @@
 import { authOptions } from "@/lib/auth"
-import { getGroupDetails, leaveGroup } from "@/lib/groups"
+import { getGroupDetails, leaveGroup, deleteGroup } from "@/lib/groups"
 import { getServerSession } from "next-auth"
 import { NextRequest, NextResponse } from "next/server"
 
@@ -25,8 +25,7 @@ export async function GET(
   }
 }
 
-
-// leave group
+// leave/delete group
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }>}) {
   console.log("entered delete route")
     try {
@@ -37,7 +36,14 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        await leaveGroup(id, session.user.id)
+        const url = new URL(request.url)
+        const action = url.searchParams.get('action')
+
+        if (action === 'delete') {
+            await deleteGroup(id, session.user.id)
+        } else {
+            await leaveGroup(id, session.user.id)
+        }
 
         return NextResponse.json({ success: true })
 
