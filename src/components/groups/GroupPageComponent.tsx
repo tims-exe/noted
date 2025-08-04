@@ -5,6 +5,7 @@ import { GroupDetails } from "@/types/group";
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { toast } from "sonner";
+import { io, Socket } from 'socket.io-client';
 import {
   Tooltip,
   TooltipContent,
@@ -22,10 +23,61 @@ export default function GroupPageComponent({ id }: GroupPageProps) {
     const router = useRouter()
     const [group, setGroup] = useState<GroupDetails | null>(null)
     const [loading, setLoading] = useState<boolean>(true)
+    const [socket, setSocket] = useState<Socket | null>(null);
 
     useEffect(() => {
+        // 1. Fetch initial data
         fetchGroupDetails()
-    }, [])
+        
+        // 2. Set up socket
+        const s = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:4000', {
+            path: '/socket.io',
+            transports: ['websocket', 'polling'],
+        });
+        
+        setSocket(s);
+        
+        // 3. Tell server which group this client is in
+        s.emit('join group', id);
+        
+        // 4. Listen for real-time task events
+        s.on('task_created', (newTask) => {
+            setGroup(g => {
+                if (!g) return g;
+                return {
+                    ...g,
+                    tasks: [newTask, ...g.tasks]
+                };
+            });
+        });
+        
+        s.on('task_updated', (updatedTask) => {
+            setGroup(g => {
+                if (!g) return g;
+                return {
+                    ...g,
+                    tasks: g.tasks.map(task => 
+                        task.id === updatedTask.id ? updatedTask : task
+                    )
+                };
+            });
+        });
+        
+        s.on('task_deleted', (deletedTask) => {
+            setGroup(g => {
+                if (!g) return g;
+                return {
+                    ...g,
+                    tasks: g.tasks.filter(task => task.id !== deletedTask.id)
+                };
+            });
+        });
+        
+        // 5. Cleanup on unmount
+        return () => {
+            s.disconnect();
+        };
+    }, [id])
 
     const fetchGroupDetails = async () => {
         try {
@@ -115,7 +167,7 @@ export default function GroupPageComponent({ id }: GroupPageProps) {
                             align="self-end mr-10"
                         />
                     </div>
-                    <AddTaskButton group={true} groupId={group.id}/>
+                    <AddTaskButton group={true} groupId={group.id} socket={socket} />
                 </div>
             </div>
             <div className="w-0.5 bg-neutral-400 self-stretch my-10 rounded-full"></div>

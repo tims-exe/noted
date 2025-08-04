@@ -21,6 +21,7 @@ import {
 
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { Socket } from 'socket.io-client';
 
 interface DialogComponentProps {
   _id: string;
@@ -29,7 +30,8 @@ interface DialogComponentProps {
   _status: string;
   _edit: boolean;
   _group: boolean;
-  _groupId? : string;
+  _groupId?: string;
+  _socket?: Socket | null;
 }
 
 const DialogComponents = ({
@@ -39,7 +41,8 @@ const DialogComponents = ({
   _edit,
   _id,
   _group,
-  _groupId
+  _groupId,
+  _socket
 }: DialogComponentProps) => {
   const [name, setName] = useState(_name);
   const [desc, setDesc] = useState(_desc);
@@ -50,7 +53,7 @@ const DialogComponents = ({
     in_progress: "In Progress",
     completed: "Completed",
   };
-
+  
   const [status, setStatus] = useState(_edit ? statusMap[_status] : "");
 
   const canSave = name.trim() !== "" && status !== "";
@@ -65,49 +68,64 @@ const DialogComponents = ({
     try {
       if (_edit) {
         const res = await fetch(`/api/tasks/${_id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            }, 
-            body: JSON.stringify({
-                name: name.trim(),
-                desc: desc.trim(),
-                status,
-            })
-        })
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          }, 
+          body: JSON.stringify({
+            name: name.trim(),
+            desc: desc.trim(),
+            status
+          })
+        });
+
         if (res.ok) {
-            toast(`Task ${updateString}`);
+          const updatedTask = await res.json();
+          toast(`Task ${updateString}`);
+          
+          // Emit socket event for real-time updates
+          if (_group && _socket) {
+            _socket.emit('task_updated', updatedTask);
+          } else {
             router.refresh();
+          }
         } else {
-            const errorData = await res.json();
-            toast(`Failed to ${updateString.toLowerCase()} task: ${errorData.error || 'Unknown error'}`);
+          const errorData = await res.json();
+          toast(`Failed to ${updateString.toLowerCase()} task: ${errorData.error || 'Unknown error'}`);
         }
-      }
-      else {
+      } else {
         const endpoint = _group && _groupId 
           ? `/api/groups/${_groupId}/tasks` 
           : "/api/tasks";
-          
+  
         const res = await fetch(endpoint, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                name: name.trim(),
-                desc: desc.trim(),
-                status,
-            }),
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: name.trim(),
+            desc: desc.trim(),
+            status,
+          }),
         });
+
         if (res.ok) {
-            setName("");
-            setDesc("");
-            setStatus("");
-            toast(`Task ${updateString}`);
+          const newTask = await res.json();
+          setName("");
+          setDesc("");
+          setStatus("");
+          toast(`Task ${updateString}`);
+          
+          // Emit socket event for real-time updates
+          if (_group && _socket) {
+            _socket.emit('task_created', newTask);
+          } else {
             router.refresh();
+          }
         } else {
-            const errorData = await res.json();
-            toast(`Failed to ${updateString.toLowerCase()} task: ${errorData.error || 'Unknown error'}`);
+          const errorData = await res.json();
+          toast(`Failed to ${updateString.toLowerCase()} task: ${errorData.error || 'Unknown error'}`);
         }
       }
     } catch (error) {
@@ -121,25 +139,32 @@ const DialogComponents = ({
   const handleDelete = async () => {
     setLoading(true);
     try {
-        const res = await fetch(`/api/tasks/${_id}`, {
-            method: "DELETE",
-        });
+      const res = await fetch(`/api/tasks/${_id}`, {
+        method: "DELETE",
+      });
 
-        if (res.ok) {
-            toast(`Task Deleted`);
-            router.refresh();
+      if (res.ok) {
+        const deletedTask = await res.json();
+        toast(`Task Deleted`);
+        
+        // Emit socket event for real-time updates
+        if (_group && _socket) {
+          _socket.emit('task_deleted', deletedTask);
+        } else {
+          router.refresh();
         }
-        else {
-            const errorData = await res.json();
-            toast(`Failed to Delete Task: ${errorData.error || 'Unknown error'}`);
-        }
+      } else {
+        const errorData = await res.json();
+        toast(`Failed to Delete Task: ${errorData.error || 'Unknown error'}`);
+      }
     } catch (error) {
-        console.error('Error deleting task:', error);
-        toast('Error deleting task');
+      console.error('Error deleting task:', error);
+      toast('Error deleting task');
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   }
+
   return (
     <DialogContent autoFocus={false} onOpenAutoFocus={(e) => e.preventDefault()}>
       <DialogHeader>

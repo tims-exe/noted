@@ -1,79 +1,83 @@
-import { createServer } from "node:http";
-import { Server as SocketIOServer } from "socket.io";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "./src/lib/auth"; 
-import type { NextApiRequest, NextApiResponse } from "next";
+import express from 'express';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+// import cors from 'cors';
 
-const httpServer = createServer();
-const io = new SocketIOServer(httpServer, {
-  path: "/socket",
-  cors: { 
-    origin: process.env.NEXTAUTH_URL || "http://localhost:3000",
-    methods: ["GET", "POST"],
-    credentials: true
+const app = express();
+const server = createServer(app);
+
+// Allow your front-end origin
+const io = new Server(server, {
+  path: '/socket.io',
+  cors: {
+    origin: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+    methods: ['GET', 'POST'],
+    credentials: true,
   },
+  transports: ['websocket', 'polling'],
 });
 
-io.use(async (socket, next) => {
-  try {
-    const { groupId } = socket.handshake.query;
-    
-    if (!groupId) {
-      return next(new Error("GroupId required"));
-    }
+// Keep track of which sockets are in which group
+const groupRooms = new Map<string, Set<string>>();
 
-    // Get session from NextAuth cookie  
-    const req = socket.request as unknown as NextApiRequest;
-    const res = {} as NextApiResponse;
+io.on('connection', socket => {
+  console.log(`🔌 Connected: ${socket.id}`);
 
-    const session = await getServerSession(req, res, authOptions);
-    if (!session?.user) {
-      return next(new Error("Not authenticated"));
-    }
-
-    socket.data.userId = session.user.id;
-    socket.data.groupId = groupId;
-    next();
-  } catch (error) {
-    console.error("Socket auth error:", error);
-    next(new Error("Authentication failed"));
-  }
-});
-
-io.on("connection", (socket) => {
-  console.log(`User ${socket.data.userId} connected to group ${socket.data.groupId}`);
-  
-  // Join the group room
-  socket.join(socket.data.groupId);
-  
-  // Notify others that user joined
-  socket.to(socket.data.groupId).emit("user_joined", {
-    userId: socket.data.userId
-  });
-
-  // Handle task events
-  socket.on("task_created", (task) => {
-    socket.to(socket.data.groupId).emit("task_created", task);
-  });
-
-  socket.on("task_updated", (task) => {
-    socket.to(socket.data.groupId).emit("task_updated", task);
-  });
-
-  socket.on("task_deleted", (data) => {
-    socket.to(socket.data.groupId).emit("task_deleted", data);
-  });
-
-  // Handle disconnect
-  socket.on("disconnect", () => {
-    console.log(`User ${socket.data.userId} disconnected from group ${socket.data.groupId}`);
-    socket.to(socket.data.groupId).emit("user_left", {
-      userId: socket.data.userId
+  socket.on('join group', (groupId: string) => {
+    // Leave all other rooms
+    socket.rooms.forEach(r => {
+      if (r !== socket.id) socket.leave(r);
     });
+
+    // Join the new room
+    socket.join(groupId);
+
+    // Track state
+    if (!groupRooms.has(groupId)) {
+      groupRooms.set(groupId, new Set());
+    }
+    groupRooms.get(groupId)!.add(socket.id);
+
+    console.log(`👥 ${socket.id} joined ${groupId} (total: ${groupRooms.get(groupId)!.size})`);
+  });
+
+  // Tasks: broadcast to the room
+  socket.on('task_created', (data) => {
+    const rooms = Array.from(socket.rooms).filter(r => r !== socket.id);
+    rooms.forEach(room => io.to(room).emit('task_created', data));
+  });
+
+  socket.on('task_updated', (data) => {
+    const rooms = Array.from(socket.rooms).filter(r => r !== socket.id);
+    rooms.forEach(room => io.to(room).emit('task_updated', data));
+  });
+
+  socket.on('task_deleted', (data) => {
+    const rooms = Array.from(socket.rooms).filter(r => r !== socket.id);
+    rooms.forEach(room => io.to(room).emit('task_deleted', data));
+  });
+
+  socket.on('disconnect', reason => {
+    console.log(`❌ Disconnected: ${socket.id} (${reason})`);
+    
+    // Clean up from groupRooms
+    groupRooms.forEach((sockets, groupId) => {
+      if (sockets.delete(socket.id)) {
+        console.log(`🗑️ Removed ${socket.id} from ${groupId}`);
+        if (sockets.size === 0) {
+          groupRooms.delete(groupId);
+          console.log(`🧹 Cleared empty group ${groupId}`);
+        }
+      }
+    });
+  });
+
+  socket.on('error', err => {
+    console.error(`⚠️ Socket error ${socket.id}:`, err);
   });
 });
 
 const PORT = process.env.SOCKET_PORT || 4000;
-httpServer.listen(PORT, () => {
-  console.log(`Socket server listening on port ${PORT}`);
+server.listen(PORT, () => {
+  console.log(`✅ Socket.IO server running on port ${PORT}`);
 });
