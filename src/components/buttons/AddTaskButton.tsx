@@ -13,11 +13,12 @@ interface AddButtonProps {
 }
 
 const AddTaskButton = ({ group, groupId, socket }: AddButtonProps) => {
+  const containerClass = group 
+    ? "w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-[0_0_20px_2px_rgba(0,0,0,0.25)] hover:scale-105 transition-transform hover:cursor-pointer"
+    : "absolute bottom-6 right-6 w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-[0_0_20px_2px_rgba(0,0,0,0.25)] hover:scale-105 transition-transform mb-3 mr-3 hover:cursor-pointer";
+
   return (
-    <div
-      className="absolute bottom-6 right-6 w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-[0_0_20px_2px_rgba(0,0,0,0.25)]
-          hover:scale-105 transition-transform mb-3 mr-3 hover:cursor-pointer"
-    >
+    <div className={containerClass}>
       <Dialog>
         <DialogTrigger>
           <Image

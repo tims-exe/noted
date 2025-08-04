@@ -53,7 +53,7 @@ const DialogComponents = ({
     in_progress: "In Progress",
     completed: "Completed",
   };
-  
+
   const [status, setStatus] = useState(_edit ? statusMap[_status] : "");
 
   const canSave = name.trim() !== "" && status !== "";
@@ -78,12 +78,11 @@ const DialogComponents = ({
             status
           })
         });
-
+        console.log(res);
         if (res.ok) {
           const updatedTask = await res.json();
           toast(`Task ${updateString}`);
           
-          // Emit socket event for real-time updates
           if (_group && _socket) {
             _socket.emit('task_updated', updatedTask);
           } else {

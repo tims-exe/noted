@@ -37,10 +37,8 @@ export default function GroupPageComponent({ id }: GroupPageProps) {
         
         setSocket(s);
         
-        // 3. Tell server which group this client is in
         s.emit('join group', id);
         
-        // 4. Listen for real-time task events
         s.on('task_created', (newTask) => {
             setGroup(g => {
                 if (!g) return g;
@@ -147,6 +145,8 @@ export default function GroupPageComponent({ id }: GroupPageProps) {
                             bgColor="bg-[#FEDFDF]"
                             emptyMsg="No pending tasks"
                             align="self-start ml-10"
+                            socket={socket}
+                            emptyAlign="text-start"
                         />
                     </div>
                     <div className="flex flex-1 justify-center items-start border-l-2 border-r-2 border-black/35 h-full w-full">
@@ -156,6 +156,8 @@ export default function GroupPageComponent({ id }: GroupPageProps) {
                             bgColor="bg-[#FEF8DF]"
                             emptyMsg="No tasks in progress"
                             align="self-center"
+                            socket={socket}
+                            emptyAlign="text-center"
                         />
                     </div>
                     <div className="flex flex-1 justify-end items-start h-full min-w-0">
@@ -165,9 +167,13 @@ export default function GroupPageComponent({ id }: GroupPageProps) {
                             bgColor="bg-[#DFFEE0]"
                             emptyMsg="No completed tasks"
                             align="self-end mr-10"
+                            socket={socket}
+                            emptyAlign="text-end"
                         />
                     </div>
-                    <AddTaskButton group={true} groupId={group.id} socket={socket} />
+                    <div className="flex flex-col justify-end items-end mt-6 h-full pb-6">
+                        <AddTaskButton group={true} groupId={group.id} socket={socket} />
+                    </div>
                 </div>
             </div>
             <div className="w-0.5 bg-neutral-400 self-stretch my-10 rounded-full"></div>

@@ -5,12 +5,14 @@ import { Task } from "@/types/tasks";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import DialogComponents from "../../DialogComponents";
 import Image from "next/image";
+import { Socket } from "socket.io-client";
 
 interface TaskCardProps {
-  task: Task;
+  task: Task
+  socket: Socket | null
 }
 
-export default function GroupTaskCard({ task }: TaskCardProps) {
+export default function GroupTaskCard({ task, socket }: TaskCardProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -36,6 +38,7 @@ export default function GroupTaskCard({ task }: TaskCardProps) {
         _status={task.status}
         _edit={true}
         _group={true}
+        _socket={socket}
       />
     </Dialog>
   );

@@ -46,6 +46,9 @@ export async function PUT(
         title: name,
         description: desc || '',
         status: statusMap[status] || 'pending'
+      },
+      include: {
+        user: true
       }
     })
 
@@ -73,6 +76,9 @@ export async function DELETE(
       where: {
         id: taskId,
         user_id: session.user.id
+      },
+      include: {
+        user: true
       }
     })
 
@@ -86,7 +92,7 @@ export async function DELETE(
       }
     })
 
-    return NextResponse.json({ message: 'Task deleted successfully' })
+    return NextResponse.json(existingTask)
   } catch (error) {
     console.error('Error deleting task:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

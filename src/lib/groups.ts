@@ -102,11 +102,12 @@ export async function leaveGroup(groupCode: string, userId: string) {
     // if user is an admin, change ownership 
     // (for now the next member but later ask user to choose next admin)
 
-    //check if its one user (creator)
+    //check if its one user - delete group and return early
     if (group.creator_id === userId && group.members.length === 1) {
         await prisma.group.delete({
-        where: { id: groupId }
+            where: { id: groupId }
         });
+        return; // cascade handles delete member
     }
 
     // promote next user
@@ -124,10 +125,10 @@ export async function leaveGroup(groupCode: string, userId: string) {
                 }),
                 prisma.groupMember.delete({
                     where: {
-                    user_id_group_id: {
-                        user_id: userId,
-                        group_id: groupId
-                    }
+                        user_id_group_id: {
+                            user_id: userId,
+                            group_id: groupId
+                        }
                     }
                 })
             ])
@@ -135,6 +136,7 @@ export async function leaveGroup(groupCode: string, userId: string) {
         return 
     }
 
+    // if user is not the creator or there are multiple members
     await prisma.groupMember.delete({
         where: {
             user_id_group_id: {
@@ -143,7 +145,6 @@ export async function leaveGroup(groupCode: string, userId: string) {
             }
         }
     })
-
 }
 
 // get group details with member details and tasks
