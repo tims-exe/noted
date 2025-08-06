@@ -33,10 +33,10 @@ export default function GroupPageComponent({ id, user }: GroupPageProps) {
     ?.role === "admin";
 
     useEffect(() => {
-        // 1. Fetch initial data
+        // Fetch initial data
         fetchGroupDetails()
         
-        // 2. Set up socket
+        // Set up socket
         const s = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:4000', {
             path: '/socket.io',
             transports: ['websocket', 'polling'],
@@ -78,7 +78,6 @@ export default function GroupPageComponent({ id, user }: GroupPageProps) {
             });
         });
         
-        // 5. Cleanup on unmount
         return () => {
             s.disconnect();
         };

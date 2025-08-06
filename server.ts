@@ -1,12 +1,10 @@
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-// import cors from 'cors';
 
 const app = express();
 const server = createServer(app);
 
-// Allow your front-end origin
 const io = new Server(server, {
   path: '/socket.io',
   cors: {
@@ -17,31 +15,28 @@ const io = new Server(server, {
   transports: ['websocket', 'polling'],
 });
 
-// Keep track of which sockets are in which group
 const groupRooms = new Map<string, Set<string>>();
 
 io.on('connection', socket => {
-  console.log(`🔌 Connected: ${socket.id}`);
+  console.log(`Connected: ${socket.id}`);
 
   socket.on('join group', (groupId: string) => {
-    // Leave all other rooms
+    // leave all other rooms
     socket.rooms.forEach(r => {
       if (r !== socket.id) socket.leave(r);
     });
 
-    // Join the new room
+    // join new room
     socket.join(groupId);
 
-    // Track state
     if (!groupRooms.has(groupId)) {
       groupRooms.set(groupId, new Set());
     }
     groupRooms.get(groupId)!.add(socket.id);
 
-    console.log(`👥 ${socket.id} joined ${groupId} (total: ${groupRooms.get(groupId)!.size})`);
+    console.log(`${socket.id} joined ${groupId} (total: ${groupRooms.get(groupId)!.size})`);
   });
 
-  // Tasks: broadcast to the room
   socket.on('task_created', (data) => {
     const rooms = Array.from(socket.rooms).filter(r => r !== socket.id);
     rooms.forEach(room => io.to(room).emit('task_created', data));
@@ -58,26 +53,25 @@ io.on('connection', socket => {
   });
 
   socket.on('disconnect', reason => {
-    console.log(`❌ Disconnected: ${socket.id} (${reason})`);
+    console.log(`Disconnected: ${socket.id} (${reason})`);
     
-    // Clean up from groupRooms
     groupRooms.forEach((sockets, groupId) => {
       if (sockets.delete(socket.id)) {
-        console.log(`🗑️ Removed ${socket.id} from ${groupId}`);
+        console.log(`Removed ${socket.id} from ${groupId}`);
         if (sockets.size === 0) {
           groupRooms.delete(groupId);
-          console.log(`🧹 Cleared empty group ${groupId}`);
+          console.log(`Cleared empty group ${groupId}`);
         }
       }
     });
   });
 
   socket.on('error', err => {
-    console.error(`⚠️ Socket error ${socket.id}:`, err);
+    console.error(`Socket error ${socket.id}:`, err);
   });
 });
 
 const PORT = process.env.SOCKET_PORT || 4000;
 server.listen(PORT, () => {
-  console.log(`✅ Socket.IO server running on port ${PORT}`);
+  console.log(`Socket.IO server running on port ${PORT}`);
 });
