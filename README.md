@@ -1,4 +1,4 @@
-# 📝 Task Manager
+# 📝 Noted
 
 A modern task management web application with real-time collaboration features. Users can organize tasks across three sections (Pending, In Progress, Completed) and collaborate with team members through group workspaces.
 
